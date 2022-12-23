@@ -9,19 +9,7 @@ import matplotlib.ticker as mticker
 
 from utils import circle_with_legend, config_labels, save
 
-
-
-    
-    
-
-
-
-
 config_labels(fontsize = 13, lw = 1, major = 8, minor = 4)
-
-
-        
-
 
 def mapping():
     
@@ -67,11 +55,6 @@ def mapping():
     #ax1.set(title = '(a) Posição Final das OGME')
     return fig, ax1
 
-
-
-
-
-    
 def plot_trajetorias(phase, rt_type = False):
 
     fig, ax1 = mapping()
