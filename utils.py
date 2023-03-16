@@ -3,16 +3,17 @@ import shapely.geometry as sgeom
 from cartopy.geodesic import Geodesic
 import numpy as np
 import matplotlib.pyplot as plt
+import os 
 
 
-
+    
 def config_labels(fontsize = 13, lw = 1, major = 8, minor = 4):
 
     plt.rcParams.update({'font.size': fontsize, 
                      'axes.linewidth' : lw,
                      'grid.linewidth' : lw,
                      'lines.linewidth' : lw,
-                     'legend.frameon' : False,
+                     'legend.frameon' : True,
                      'savefig.bbox' : 'tight',
                      'savefig.pad_inches' : 0.05,
                      'mathtext.fontset': 'dejavuserif', 
@@ -38,7 +39,10 @@ def config_labels(fontsize = 13, lw = 1, major = 8, minor = 4):
 
 
 def save(fig, path, FigureName):
-    fig.savefig(f"{path}\\{FigureName}", dpi = 300)
+    # fig.savefig(f"{path}\\{FigureName}.pdf", dpi = 500)  ### imprimi a imagem .png
+    local = os.path.join(path, FigureName.replace('png','pdf'))     ### imprimi a imagem .pdf
+    fig.savefig(local, dpi = 500)
+    
 
 def circle_range(ax, longitude, latitude, 
                  radius = 500, color = "gray"):

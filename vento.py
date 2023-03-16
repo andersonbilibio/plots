@@ -14,9 +14,11 @@ from Ler_dados_raytracing_plots import maximum_flux, ler_dados_rt, forward_backw
 from utils import circle_with_legend, config_labels, save
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-entrada = ('C:\\Users\\Ander\\OneDrive\\Documentos\\ANDERSON\\a_Programas_raytracing\\modelos\\merra\\')
+# entrada = ('C:\\Users\\Ander\\OneDrive\\Documentos\\ANDERSON\\a_Programas_raytracing\\modelos\\merra\\')
+entrada = ('C:\\Users\\Ander\\OneDrive\\Documentos\\ANDERSON\\a_Programas_raytracing\\descendente\\modelos\\')
 
-filename = 'MERRA2_300.inst3_3d_asm_Np.20031021.SUB.nc'
+# filename = 'MERRA2_300.inst3_3d_asm_Np.20031021.SUB.nc'
+filename = 'MERRA2_300.inst3_3d_asm_Np.20061124.SUB (1).nc'
 def load_models(entrada, filename):
 #++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -28,13 +30,14 @@ def load_models(entrada, filename):
     
     ##! --->Extraindo um subset (área)
     ds_subset = ds.sel(lon=slice(-80, 0), lat=slice(-40, 20))
-    ds_subset.to_netcdf('C:\\Users\\Ander\\OneDrive\\Documentos\\ANDERSON\\a_Programas_raytracing\\modelos\\merra\\ds_AS.nc')
-    
+    #ds_subset.to_netcdf('C:\\Users\\Ander\\OneDrive\\Documentos\\ANDERSON\\a_Programas_raytracing\\modelos\\merra\\ds_AS.nc')
+    ds_subset.to_netcdf('C:\\Users\\Ander\\OneDrive\\Documentos\\ANDERSON\\a_Programas_raytracing\\descendente\\modelos\\ds_AS.nc')
     
     ## -->Extraindo as variáveis separadamente
     t = ds_subset['T'] - 273.15
     u = ds_subset['U']           #podemos utilizar as duas notações ds_subset.u
     v = ds_subset['V']
+    omega = ds_subset['OMEGA']
     
     longitude = ds_subset['lon']
     latitude = ds_subset['lat']
@@ -42,12 +45,14 @@ def load_models(entrada, filename):
     nivel_pressao = ds_subset['lev']
     
     wspd = (u**2 + v**2)**(0.5)     ## elevado no 0.5 para extrair a raiz quadrada = VELOCIDADE DO VENTO
+
+    ###niveis de pressão 250,550,850###
     
-    
-    temperatura = t.isel(time=0).sel(lev=600).values#.plot(cmap='jet')
-    vento_zonal = u.isel(time=0).sel(lev=600).values#.plot(cmap='jet')
-    vento_merid = v.isel(time=0).sel(lev=600).values#.plot(cmap='jet')
-    velocidade_vento = wspd.isel(time=0).sel(lev=600).values#.plot(cmap='jet')
+    temperatura = t.isel(time=0).sel(lev=850).values#.plot(cmap='jet')
+    vento_zonal = u.isel(time=0).sel(lev=850).values#.plot(cmap='jet')
+    vento_merid = v.isel(time=0).sel(lev=850).values#.plot(cmap='jet')
+    velocidade_vento = wspd.isel(time=0).sel(lev=850).values#.plot(cmap='jet')
+    omega = omega.isel(time=0).sel(lev=850).values#
     
     lon = longitude.values
     lat = latitude.values
@@ -89,9 +94,9 @@ def colorbar_setting(img, ax, ticks):
                 borderpad=0,
             )
     
-    cb = fig.colorbar(img, cax = axins, ticks = ticks)
+    #cb = fig.colorbar(img, cax = axins, ticks = ticks)
     
-    cb.set_label(r'Vento (m/s)')
+    #cb.ax.set_label(r'Vento (m/s)')
 
 
 def plotTrajetorias(parameters, dados, phase):
@@ -107,7 +112,9 @@ def plotTrajetorias(parameters, dados, phase):
     hora, _, date = tuple(parameters)
     
     
-    ax.text(0., 1.03, "(d)", transform = ax.transAxes)
+    
+    # ax.text(0., 1.03, "(d)", transform = ax.transAxes)
+    ax.text(0., 1.03, ' ',transform = ax.transAxes)
     time = float_time(hora)
     
     date_str = date.strftime("%d/%m/%Y") + time
@@ -116,11 +123,28 @@ def plotTrajetorias(parameters, dados, phase):
     
     x, y, vento_zonal, vento_merid = load_models(entrada, filename)
     magnitude = vento_zonal + vento_merid
+    
     img = ax.streamplot(x, y, vento_zonal, vento_merid, 
                         transform=ccrs.PlateCarree(),
               linewidth=1, density=4, color = magnitude, cmap = 'gnuplot')
     
-    colorbar_setting(img, ax, np.arange(-20, 70, 5))
+    ## COMO REDUZIR TAMANHO DA COLORBAR --->shrink=0.25
+    #colorbar_setting(img, ax, np.arange(-20, 70, 5)) 
+    
+    cb = fig.colorbar(img.lines, ticks = np.arange(-20, 70, 5), shrink=0.25)
+    
+    cb.set_label(r'Vento (m/s)')
+    
+    
+    ##---Grafico de CONTORNO---##
+    #img = ax.countor(omega, 8, linewidth=0.05, contours=dict(coloring='lines',showlabels=True)
+      
+    # cb = fig.colorbar(img.lines, ticks = np.arange(-20, 70, 5), shrink=0.25)
+    
+    # cb.set_label(r'Omega (Pa/s) 850 hPa (~1,4 km)')
+    ##------------------------##
+    
+    
     
     
     flux_col = 'fluxo_momento_medio'
@@ -171,23 +195,33 @@ def plotTrajetorias(parameters, dados, phase):
         #else:
            # ax.plot(lon[0], lat[0], "o", color = colors[i])
         
-        ax.legend(loc = "lower right")
+        ax.legend(loc = "lower right", facecolor='white')
         
+
     return FigureName, fig, ax 
 
 
-phase = "ascendente"
+phase = "descendente"
 parame, dado = raytrancing_parametros(phase, start = None, end = None)
-path = f"entrada"
+# path = f"entrada"
+path = 'C:\\Users\\Ander\\OneDrive\\Documentos\\ANDERSON\\a_Programas_raytracing\\descendente\\'
+
+##---=========IMPRIMIR SOMENTE O CASO ESCOLHIDO==========---##
+i = -6
+parameters = parame[i]
+dados = dado[i]
+FigureName, fig, ax = plotTrajetorias(parameters, dados, phase)
+save(fig, path, FigureName)
+##---=========IMPRIMIR SOMENTE O CASO ESCOLHIDO==========---##
 
 
-for i in range(3):
+# for i in range(8):
     
-    parameters = parame[i]
-    dados = dado[i]
+#     parameters = parame[i]
+#     dados = dado[i]
     
-    try:
-     FigureName, fig = plotTrajetorias(parameters, dados, phase)
-     save(fig, path, FigureName)
-    except:
-        continue
+#     try:
+#     FigureName, fig = plotTrajetorias(parameters, dados, phase)
+#     #save(fig, path, FigureName)
+#   except:
+#         continue

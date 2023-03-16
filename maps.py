@@ -55,10 +55,9 @@ def mapping():
     #ax1.set(title = '(a) Posição Final das OGME')
     return fig, ax1
 
-def plot_trajetorias(phase, rt_type = False):
 
-    fig, ax1 = mapping()
-    
+def plot_trajetorias(ax1, phase, rt_type = False):
+
     out, dados = raytrancing_parametros(phase, start = 0)
     
     hora_inicial, altitude, date_sel = tuple(out[0])    
@@ -104,11 +103,10 @@ def plot_trajetorias(phase, rt_type = False):
                  markersize = 4,
                  transform = ccrs.PlateCarree())
            
-    radius_list = [300, 700, 1100, 1500]
     
-    circle_with_legend(ax1, radius_list, scale = 110)
     
-    return fig
+    
+    return ax1
 
 def main():
     phase ="descendente" #"ascendente" 
@@ -116,6 +114,10 @@ def main():
     #for phase in ["descendente", "ascendente"]:
     
     caminho_vento = f"C:\\Users\\Ander\\OneDrive\\Documentos\\ANDERSON\\a_Programas_raytracing\\{phase}\\rt\\vento\\"
+    
+    fig, ax1 = mapping()
+    
+    circle_with_legend(ax1, [300, 700, 1100, 1500], scale = 110)
      
     for rt_type in ["fordward", "backward"]:
         
@@ -123,7 +125,8 @@ def main():
         FigureName = f"{phase}_todosCasos_{rt_type}.png"
         path_to_save = "\\".join(caminho_vento.split("\\")[:8])
         
-        fig = plot_trajetorias(phase, rt_type = rt_type)
+        fig = plot_trajetorias(fig, ax1, phase, rt_type = rt_type)
         
-        save(fig, path_to_save, FigureName)
+        #save(fig, path_to_save, FigureName)
 
+#main()
