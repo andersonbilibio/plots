@@ -97,18 +97,15 @@ class get_obs_datetime:
         return self.date + dt.timedelta(
             hours = hour, minutes = minute
             )
-
-def get_rt(df):
-    """
-    Entra com o dataframe (RT model)
-    para pegar o backward (fonte) and 
-    forward (posição final)
-    """
-    df = df.loc[df["rt_type"] == 0]
-
-    print(df["rt_type"])
     
-    
+    def delta_fmm(self, time):
+        tfmm = self.get_float(time)
+        if tfmm < self.obs_time:   
+            return self.obs_datetime - self.convert_dt(tfmm)
+        else:
+            return self.convert_dt(tfmm) - self.obs_datetime
+        
+        
 
 def flux_max(df):
     """Get momentum flux maximum"""
@@ -128,7 +125,6 @@ def get_fmm(df):
 
 def get_10fmm(df, phase = "ascendente"):
     """Get altitude, time and 10% of momentum flux maximum"""
-    
     fmm_alt, fmm_time, fmm = get_fmm(df)
     
     columns = ["z", "time", "fmm"]
@@ -148,16 +144,34 @@ def get_10fmm(df, phase = "ascendente"):
     return  tuple(last.itertuples(
         index = False, name = None))[0]   
 
-def get_alt_deltatime_fmm(df, filename):
-    alt, time, fmm = get_fmm(df)
-    
-    obs = get_obs_datetime(ts, filename)
-    
-    tfmm = obs.get_float(time)
-    
-    delta_time = (obs.obs_datetime - obs.convert_dt(tfmm))
+def get_final_position(df, phase = "ascendente"):
 
-    return  alt /1000, delta_time
+    forward, backward = sep_for_and_back(df, phase = phase)
+    
+    if phase == "ascendente":
+        
+        first = forward[:1][["time", "z"]]
+        
+        time, alt = tuple(first.itertuples(
+                index = False, name = None))[0]   
+        
+        t = obs.get_float(time)
+        
+        return alt /1000, obs.convert_dt(t) - obs.obs_datetime
+        
+        
+    else:
+        first = backward[-1:][["time", "z"]]
+        
+        time, alt = tuple(first.itertuples(
+                index = False, name = None))[0]   
+        
+        t = obs.get_float(time)
+        
+        return alt / 1000, obs.obs_datetime - obs.convert_dt(t) 
+    
+
+
 infile = "database/vento/"
 
 files = os.listdir(infile)
@@ -170,14 +184,12 @@ phase = "ascendente"
 df = load(infile + filename)
 ts = load_parameters(filename, phase = phase)
 
-forw, back = sep_for_and_back(df, phase = phase)
+obs = get_obs_datetime(ts, filename)
+alt, time, fmm = get_fmm(df)
 
+delta_fmm = obs.delta_fmm(time)
 
-
-alt, dtime = get_alt_deltatime_fmm(df, filename)
-
-print(alt, dtime)
-
+alt, dtime = get_final_position(df, phase= phase)
 
 
 
