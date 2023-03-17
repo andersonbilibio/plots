@@ -21,7 +21,7 @@ def load(infile):
     return pd.read_csv(infile, header = None, names = names)
 
 def sep_for_and_back(df, phase = "ascendente"):
-    columns = ["time", "fmm", "z", "lat", 
+    columns = ["time", "dtime", "fmm", "z", "lat", 
                "lon", "rt_type"]
     index_zero = get_obs_time(df)
     
@@ -144,7 +144,7 @@ def get_10fmm(df, phase = "ascendente"):
     return  tuple(last.itertuples(
         index = False, name = None))[0]   
 
-def get_final_position(df, phase = "ascendente"):
+def get_final_position(df, obs, phase = "ascendente"):
 
     forward, backward = sep_for_and_back(df, phase = phase)
     
@@ -154,10 +154,8 @@ def get_final_position(df, phase = "ascendente"):
         
         time, alt = tuple(first.itertuples(
                 index = False, name = None))[0]   
-        
-        t = obs.get_float(time)
-        
-        return alt /1000, obs.convert_dt(t) - obs.obs_datetime
+                
+        return alt /1000, obs.get_float(time) - obs.obs_time
         
         
     else:
@@ -166,31 +164,132 @@ def get_final_position(df, phase = "ascendente"):
         time, alt = tuple(first.itertuples(
                 index = False, name = None))[0]   
         
-        t = obs.get_float(time)
-        
-        return alt / 1000, obs.obs_datetime - obs.convert_dt(t) 
+        return alt / 1000, obs.get_float(time)
     
+def load_files(infile, filename, phase = "ascendente"):
+    df = load(infile + filename)
+    ts = load_parameters(filename, phase = phase)
+    obs = get_obs_datetime(ts, filename)
+    return df, obs
 
 
+def get_alt_time_fmm(df, obs):
+    
+    alt, time, fmm = get_fmm(df)
+    delta_fmm = obs.convert_dt(time)
+    
+    return alt / 1000,delta_fmm 
+
+#def main():
+    
 infile = "database/vento/"
 
 files = os.listdir(infile)
-
+phase = "ascendente"
 filename = files[0]
 
-phase = "ascendente"
+def save(files, phase = "ascendente"):
+    res = {"alt": [], 
+           "time": []
+           }
+    idx = []
+    for filename in files:
+        df, obs = load_files(infile, filename, phase = phase)
+        
+        alt, time = get_final_position(df, obs, phase = phase)
+        
+        res["alt"].append(alt)
+        res["time"].append(time)
+        idx.append(fname_to_date(filename))
+    
+    
+    ts = pd.DataFrame(res, index = idx)
+    print(ts)
+    ts.to_csv(f"{phase}_final_positions.txt", index = True)
 
 
-df = load(infile + filename)
-ts = load_parameters(filename, phase = phase)
-
-obs = get_obs_datetime(ts, filename)
-alt, time, fmm = get_fmm(df)
-
-delta_fmm = obs.delta_fmm(time)
-
-alt, dtime = get_final_position(df, phase= phase)
 
 
+import matplotlib.pyplot as plt 
 
 
+def plot_traj(ax, 
+              infile, filename, 
+              phase = "ascendente", 
+              rt_type = "fordward"):
+    
+    df, obs = load_files(infile, filename, phase = phase)
+    forward, backward = sep_for_and_back(df, phase = phase)
+    
+    if rt_type == "fordward":
+        ba = forward
+        if phase == "descendente":
+            end = 0
+        else:
+            end = 0
+    else:
+        ba = backward
+        if phase == "descendente":
+            end = -1
+        else:
+            end = 0
+        
+    
+    lats = ba["lat"].values
+    lons = ba["lon"].values
+    
+    plt.plot(lons, 
+             lats,  
+             color='blue', 
+             linestyle='-')
+    
+    lat = lats[end]
+    lon = lons[end]
+    
+        
+    ax.plot(lon, 
+             lat, 
+             color = "k",
+             marker = "o",
+             markersize = 4)
+    
+def plot_alt(ax, 
+              infile, filename, 
+              phase = "ascendente", 
+              rt_type = "fordward", 
+              alt_lon = True):
+    
+    df, obs = load_files(infile, filename, phase = phase)
+    forward, backward = sep_for_and_back(df, phase = phase)
+
+    if rt_type == "fordward":
+        ba = forward
+        if phase == "descendente":
+            end = -1
+        else:
+            end = 0
+    else:
+        ba = backward
+        if phase == "descendente":
+            end = -1
+        else:
+            end = 0
+        
+    
+    lat = ba["lat"].values[end]
+    lon = ba["lon"].values[end]
+    
+    ax.grid()
+    
+    alt = df.loc[df["lat"] == lat, ["z"]].values / 1000
+    
+    if alt_lon:
+        ax.scatter(lon, 
+                 alt,  
+                 color='blue', 
+                 linestyle='-')
+    else:
+        ax.scatter(alt, 
+                 lat,  
+                 color='blue', 
+                 linestyle='-')
