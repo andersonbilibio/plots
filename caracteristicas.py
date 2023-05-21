@@ -120,7 +120,7 @@ def plot_caracteristicas(axs,
                  name = name)
             
                 
-def plot2(parameters, dados, num, phase):
+def plot_lat_lon_tempo(parameters, dados, num, phase):
     
      hora_inicial, altitude, date_sel = tuple(parameters[num])    
      colors = ["blue", "red"]
@@ -132,12 +132,13 @@ def plot2(parameters, dados, num, phase):
      
      infos = f"$\lambda_H = ${lambdaH} km, $\\tau = $ {periodo} min, $c_H = $ {vel_fase} m/s, $\phi = $ {propagacao}°"
      com_vento, sem_vento = dados[num]
+     
                 
      fig, axs = plt.subplots(figsize = (12, 10), 
                              nrows = 3)
      
      axs[0].text(0.2, 1.1, infos, transform = axs[0].transAxes)
-     
+     # altitude = 87
      axs[0].axhline(altitude, color = "k", lw = 1, 
                 label = f"Alt. de emissão {altitude} km")
  
@@ -156,9 +157,12 @@ def plot2(parameters, dados, num, phase):
                               name = names[i])
          
      path_to_save = f"C:\\Users\\Ander\\OneDrive\\Documentos\\ANDERSON\\a_Programas_raytracing\\{phase}"
-     FigureName = f"{phase}_{date_sel.strftime('%Y_%m_%d')}.png"
+     path = "C:\\Users\\Ander\\OneDrive\\Documentos\\ANDERSON\\a_Programas_raytracing\\figures\\"
+     FigureName = f"{phase}_{date_sel.strftime('%Y_%m_%d')}.pdf"
      print(FigureName)
-     save(fig, path_to_save, FigureName)
+     #save(fig, path_to_save, FigureName)
+     
+     fig.savefig(path + FigureName, dpi = 500)
      
      
 def all_plots(phase = "descendente"):
@@ -167,11 +171,17 @@ def all_plots(phase = "descendente"):
     
     for num in range(len(dados)):
         try:
-            plot2(parameters, dados, num, phase)
+            plot_lat_lon_tempo(parameters, dados, num, phase)
         except:
             continue
        
-    
-for na in ["descendente", "ascendente"]:
-    all_plots(phase = na)
+def run():
+    for na in ["descendente", "ascendente"]:
+        all_plots(phase = na)
+phase = "descendente"
+parameters, dados = raytrancing_parametros(phase, start = None, end = None)
 
+num = 0
+
+plot_lat_lon_tempo(parameters, dados, num, phase)
+all_plots(phase = "ascendente")

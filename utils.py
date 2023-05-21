@@ -67,31 +67,35 @@ def circle_with_legend(ax, radius_list, scale = 100):
      
      colors = ['darkviolet','deeppink']
      markes = ["^","o"]
+     
+     for i, name in enumerate(infos.keys()):
          
-     for radius in radius_list:
+         lon, lat = tuple(infos[name])
          
-         if len(radius_list) > 2:
+         ax.scatter(lon,lat,
+                     marker=markes[i],
+                     color= colors[i],
+                     s=120,
+                     transform=ccrs.PlateCarree())
+             
          
-             delta = radius / scale
-             ax.text(-36.55, -7.38 + delta, f"{radius} km", 
-                 transform=ccrs.PlateCarree())
-         
-         for i, name in enumerate(infos.keys()):
-         
-             lon, lat = tuple(infos[name])
-        
-             circle_range(ax, lon, lat, 
-                          radius = radius, 
-                          color = "black")
+         for radius in radius_list:
+             
+             if len(radius_list) > 2:
+             
+                 delta = radius / scale
+                 ax.text(-36.55, -7.38 + delta, f"{radius} km", 
+                     transform=ccrs.PlateCarree())
              
              
-             ax.plot(lon,lat,
-                         marker=markes[i],
-                         color= colors[i],
-                         markersize=4,
-                         label= name,
-                         zorder=100,
-                         transform=ccrs.PlateCarree())
+             
+                 
+            
+                 circle_range(ax, lon, lat, 
+                              radius = radius, 
+                              color = "black")
+                 
+                 
                  
              
     
